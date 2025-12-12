@@ -1,0 +1,11 @@
+name: NobleMobs
+version: 1.0.0
+main: vsctemplatemc.NobleMobsPlugin
+api-version: "1.21"
+description: NPC citizens with shops, quests, and a player-driven bazaar.
+authors:
+  - Noble Devs
+commands:
+  noblemobs:
+    description: Inspect NobleMobs systems.
+    usage: /<command> [citizens|shops|quests|bazaar]
