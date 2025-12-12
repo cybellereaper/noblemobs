@@ -14,7 +14,9 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import vsctemplatemc.bazaar.BazaarListing;
 import vsctemplatemc.bazaar.BazaarService;
+import vsctemplatemc.citizens.CitizenBinder;
 import vsctemplatemc.citizens.CitizenRegistry;
+import vsctemplatemc.citizens.Role;
 import vsctemplatemc.quests.QuestProgress;
 import vsctemplatemc.quests.QuestService;
 import vsctemplatemc.shops.ShopService;
@@ -28,13 +30,15 @@ public class NobleCommand implements CommandExecutor, TabCompleter {
     private final ShopService shopService;
     private final QuestService questService;
     private final BazaarService bazaarService;
+    private final CitizenBinder citizenBinder;
 
     public NobleCommand(CitizenRegistry citizenRegistry, ShopService shopService, QuestService questService,
-                        BazaarService bazaarService) {
+                        BazaarService bazaarService, CitizenBinder citizenBinder) {
         this.citizenRegistry = citizenRegistry;
         this.shopService = shopService;
         this.questService = questService;
         this.bazaarService = bazaarService;
+        this.citizenBinder = citizenBinder;
     }
 
     @Override
@@ -49,6 +53,7 @@ public class NobleCommand implements CommandExecutor, TabCompleter {
             case "shops" -> sendShops(sender);
             case "quests" -> sendQuests(sender);
             case "bazaar" -> sendBazaar(sender);
+            case "binder" -> giveBinder(sender, args);
             default -> sender.sendMessage(ChatColor.RED + "Unknown subcommand");
         }
         return true;
@@ -95,10 +100,33 @@ public class NobleCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.LIGHT_PURPLE + "Bazaar: " + lines);
     }
 
+    private void giveBinder(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ChatColor.RED + "Only players can receive binders.");
+            return;
+        }
+
+        Role role = Role.MERCHANT;
+        if (args.length >= 2) {
+            try {
+                role = Role.valueOf(args[1].toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                sender.sendMessage(ChatColor.RED + "Invalid role. Use: INNKEEPER or MERCHANT.");
+                return;
+            }
+        }
+        String shopName = args.length >= 3 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length))
+                : player.getName() + "'s Stall";
+
+        player.getInventory().addItem(citizenBinder.createBinder(role, shopName, "Prepared by " + player.getName()));
+        sender.sendMessage(ChatColor.GREEN + "Binder issued for role " + role.name().toLowerCase() + ChatColor.GRAY
+                + " (shop: " + shopName + ")");
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("citizens", "shops", "quests", "bazaar");
+            return Arrays.asList("citizens", "shops", "quests", "bazaar", "binder");
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("shops")) {
             return new ArrayList<>(shopService.getShops().keySet());

@@ -4,6 +4,8 @@ import java.util.Objects;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import vsctemplatemc.bazaar.BazaarService;
+import vsctemplatemc.citizens.CitizenBinder;
+import vsctemplatemc.citizens.CitizenInteractListener;
 import vsctemplatemc.citizens.CitizenRegistry;
 import vsctemplatemc.commands.NobleCommand;
 import vsctemplatemc.quests.QuestListener;
@@ -21,6 +23,7 @@ public class NobleMobsPlugin extends JavaPlugin {
     private ShopService shopService;
     private QuestService questService;
     private BazaarService bazaarService;
+    private CitizenBinder citizenBinder;
 
     @Override
     public void onEnable() {
@@ -28,15 +31,17 @@ public class NobleMobsPlugin extends JavaPlugin {
         shopService = new ShopService();
         questService = new QuestService();
         bazaarService = new BazaarService();
+        citizenBinder = new CitizenBinder();
 
         bootstrapSampleContent();
 
-        NobleCommand command = new NobleCommand(citizenRegistry, shopService, questService, bazaarService);
+        NobleCommand command = new NobleCommand(citizenRegistry, shopService, questService, bazaarService, citizenBinder);
         PluginCommand pluginCommand = Objects.requireNonNull(getCommand("noblemobs"), "Command registration failed");
         pluginCommand.setExecutor(command);
         pluginCommand.setTabCompleter(command);
 
         getServer().getPluginManager().registerEvents(new QuestListener(questService), this);
+        getServer().getPluginManager().registerEvents(new CitizenInteractListener(citizenRegistry, shopService, citizenBinder), this);
         getLogger().info("NobleMobs systems initialized with starter content.");
     }
 

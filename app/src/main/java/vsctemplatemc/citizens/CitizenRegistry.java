@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,16 @@ import java.util.stream.Collectors;
 public class CitizenRegistry {
 
     private final Map<UUID, NpcProfile> citizens = new LinkedHashMap<>();
+
+    public boolean existsWithName(String name) {
+        return citizens.values().stream().anyMatch(profile -> profile.name().equalsIgnoreCase(name));
+    }
+
+    public Optional<NpcProfile> findByName(String name) {
+        return citizens.values().stream()
+                .filter(profile -> profile.name().equalsIgnoreCase(name))
+                .findFirst();
+    }
 
     public NpcProfile createInnkeeper(String name, String persona) {
         return registerNpc(name, persona, Role.INNKEEPER);
